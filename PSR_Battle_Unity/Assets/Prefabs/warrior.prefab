@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 6777815181784018287}
   m_Layer: 0
   m_Name: warrior
-  m_TagString: Paper
+  m_TagString: Rock
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -29,8 +29,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6777815181784018286}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.76, y: -3.05, z: 0}
-  m_LocalScale: {x: 0.3, y: 0.3, z: 1}
+  m_LocalPosition: {x: -2.8303, y: -2.9774, z: 0}
+  m_LocalScale: {x: 0.15936, y: 0.15483001, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0

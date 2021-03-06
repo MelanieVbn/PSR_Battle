@@ -11,16 +11,14 @@ public class WarriorIA : MonoBehaviour
     private Rigidbody2D rb;
     private Transform target;//set target from inspector instead of looking in Update
     private Vector3 targetDir;
-    private float speed = 4f;
+    private float speed = 2f;
     private string enemyTag;
     private string hunterTag;
     private string baseTag;
     private Boolean runAway = false;
     private Boolean noEnemies = false;
-    private Boolean randomMovement = false;
     private float x;
     private float y;
-    private float timeBeforeDirectionChangement = 2;
     // Start is called before the first frame update
 
     void Start()
@@ -99,19 +97,21 @@ public class WarriorIA : MonoBehaviour
                 //rotateLookAt();
                 if (target.tag == enemyTag)
                 {
-                    targetDir = (new Vector3(x, y, 0) - rb.transform.position).normalized * speed * Time.deltaTime;
+                    targetDir = (new Vector3(x, y, 0) - rb.transform.position).normalized * (speed * 0.5f) * Time.deltaTime;
                 }
 
                 if (target.tag == hunterTag && runAway)
                 {
-                    targetDir = (rb.transform.position - new Vector3(x, y, 0)).normalized * (speed + 2) * Time.deltaTime;
+                    targetDir = (rb.transform.position - new Vector3(x, y, 0)).normalized * (speed * 0.5f) * Time.deltaTime;
                 }
             }
             else
             {
                 if (target.tag == hunterTag && runAway)
                 {
-                    targetDir = (rb.transform.position - target.position).normalized * (speed + 2) * Time.deltaTime;
+                    x = target.position.x;
+                    y = target.position.y;
+                    targetDir = (rb.transform.position - new Vector3(x, y, 0)).normalized * (speed * 0.5f) * Time.deltaTime;
                 }
                 else
                 {
@@ -125,11 +125,8 @@ public class WarriorIA : MonoBehaviour
         }
     }
     void FixedUpdate()
-    {
-        
-        rb.MovePosition(rb.transform.position + targetDir);
-        speed = 4f;
-            
+    { 
+        rb.MovePosition(rb.transform.position + targetDir);     
     }
 
     public GameObject FindClosestElement()

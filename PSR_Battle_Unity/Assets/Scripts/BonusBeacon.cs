@@ -8,9 +8,20 @@ public class BonusBeacon : MonoBehaviour
     private string[] warriorTypes = { "Paper", "Scissor", "Rock" };
     void Awake()
     {
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < 150; i++)
         {
-            warriorPrefab.tag = warriorTypes[Random.Range(0, 3)];
+            if(i < 50)
+            {
+                warriorPrefab.tag = warriorTypes[0];
+            }
+            if ( i >= 50 && i < 100)
+            {
+                warriorPrefab.tag = warriorTypes[1];
+            }
+            if (i >= 100 && i < 150)
+            {
+                warriorPrefab.tag = warriorTypes[2];
+            }
             Instantiate(warriorPrefab, new Vector3(Random.Range(-8f, 8f), Random.Range(-4f, 4f), 0), Quaternion.identity);
         }
     }
