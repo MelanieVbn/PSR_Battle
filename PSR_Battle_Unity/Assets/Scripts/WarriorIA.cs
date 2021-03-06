@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -9,14 +10,19 @@ public class WarriorIA : MonoBehaviour
     private SpriteRenderer sr;
     private Rigidbody2D rb;
     private Transform target;//set target from inspector instead of looking in Update
-    private float speed = 1f;
+    private Vector3 targetDir;
+    private float speed = 4f;
     private string enemyTag;
+    private string hunterTag;
     private string baseTag;
+    private Boolean runAway = false;
     private Boolean noEnemies = false;
+    private Boolean randomMovement = false;
     private float x;
     private float y;
     private float timeBeforeDirectionChangement = 2;
     // Start is called before the first frame update
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -25,13 +31,16 @@ public class WarriorIA : MonoBehaviour
             case "Rock":
                 sr.color = Color.grey;
                 enemyTag = "Scissor";
+                hunterTag = "Paper";
                 break;
             case "Paper":
                 enemyTag = "Rock";
+                hunterTag = "Scissor";
                 sr.color = Color.white;
                 break;
             case "Scissor":
                 enemyTag = "Paper";
+                hunterTag = "Rock";
                 sr.color = Color.blue;
                 break;
         }
@@ -52,59 +61,92 @@ public class WarriorIA : MonoBehaviour
                 case "Rock":
                     sr.color = Color.grey;
                     enemyTag = "Scissor";
+                    hunterTag = "Paper";
                     break;
                 case "Paper":
                     enemyTag = "Rock";
+                    hunterTag = "Scissor";
                     sr.color = Color.white;
                     break;
                 case "Scissor":
                     enemyTag = "Paper";
+                    hunterTag = "Rock";
                     sr.color = Color.blue;
                     break;
             }
         }
-    }
-    void FixedUpdate()
-    {
-        GameObject clostestEnemy = FindClosestEnemy();
-        if (!noEnemies)
+
+        GameObject clostestElement = FindClosestElement();
+
+        if (clostestElement != null)
         {
-            if (clostestEnemy != null)
+            target = clostestElement.transform;
+
+            if (target.tag == hunterTag && (Vector3.Distance(rb.transform.position, target.position) < 1))
             {
-                target = clostestEnemy.transform;
+                runAway = true;
+            }
+            else
+            {
+                runAway = false;
+            }
+
+            if (!noEnemies)
+            {
+                x = target.position.x;
+                y = target.position.y;
+                //vector = vector.normalized * speed * Time.deltaTime;
                 //rotateLookAt();
-                Vector3 direction = (target.transform.position - rb.transform.position).normalized;
-                //rotate to look at the player
-                //rb.transform.LookAt(target);
-                //rb.transform.Rotate(new Vector3(0, 90, 0), Space.Self);//correcting the original rotation
-
-
-                //move towards the player
-                if (Vector3.Distance(rb.transform.position, target.position) > 0)
+                if (target.tag == enemyTag)
                 {
-                    //rb.MovePosition(rb.transform.position + (target.position.normalized * speed * Time.deltaTime));
-                    rb.MovePosition(rb.transform.position + direction * speed * Time.fixedDeltaTime);
-                    target = null;
+                    targetDir = (new Vector3(x, y, 0) - rb.transform.position).normalized * speed * Time.deltaTime;
+                }
+
+                if (target.tag == hunterTag && runAway)
+                {
+                    targetDir = (rb.transform.position - new Vector3(x, y, 0)).normalized * (speed + 2) * Time.deltaTime;
+                }
+            }
+            else
+            {
+                if (target.tag == hunterTag && runAway)
+                {
+                    targetDir = (rb.transform.position - target.position).normalized * (speed + 2) * Time.deltaTime;
+                }
+                else
+                {
+                    targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 }
             }
         }
         else
         {
-            RandomMovement();
+            targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
         }
+    }
+    void FixedUpdate()
+    {
         
+        rb.MovePosition(rb.transform.position + targetDir);
+        speed = 4f;
+            
     }
 
-    public GameObject FindClosestEnemy()
+    public GameObject FindClosestElement()
     {
         if(target == null || (Vector3.Distance(transform.position, target.position) > 0.5f))
         {
-            GameObject[] gos;
-            gos = GameObject.FindGameObjectsWithTag(enemyTag);
+            List<GameObject> gos = new List<GameObject>();
+            List<GameObject> enemies;
+            enemies = GameObject.FindGameObjectsWithTag(enemyTag).ToList();
+            List<GameObject> hunters;
+            hunters = GameObject.FindGameObjectsWithTag(hunterTag).ToList();
+            gos.AddRange(enemies);
+            gos.AddRange(hunters);
             GameObject closest = null;
             float distance = Mathf.Infinity;
             Vector3 position = transform.position;
-            if(gos.Length > 0)
+            if(gos.Count() > 0)
             {
                 noEnemies = false;
                 foreach (GameObject go in gos)
@@ -121,41 +163,21 @@ public class WarriorIA : MonoBehaviour
                 {
                     Debug.Log("L'enemi le plus proche de " + gameObject.tag + " est : " + closest.tag);
                 }
+
+                if (enemies.Count() == 0)
+                {
+                    noEnemies = true;
+                }
                 return closest;
-            }
-            else
-            {
-                noEnemies = true;
             }
         }
         return null;
-    }
-
-    void rotateLookAt()
-    {
-        Vector3 dir = target.position - rb.transform.position;
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        rb.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-    }
-    public void RandomMovement()
-    {
-        Vector3 vector = new Vector3(x, y, 0);
-        vector = vector.normalized * speed * Time.deltaTime;
-        /*timeBeforeDirectionChangement -= Time.deltaTime;  // T.dt is secs since last update
-        if (timeBeforeDirectionChangement <= 0)
-        {
-            timeBeforeDirectionChangement = 2;
-            x = Random.Range(-1f, 1f);
-            y = Random.Range(-1f, 1f);
-        }*/
-
-        rb.MovePosition(rb.transform.position + vector);
     }
    
     void OnCollisionEnter2D(Collision2D coll)
     {
         // Quel objet a été touché 
-        //Debug.Log("collided with " + coll.collider.gameObject.name);
+        Debug.Log("collided with " + coll.collider.gameObject.name);
 
         if(coll.collider.gameObject.tag == enemyTag)
         {
@@ -163,23 +185,30 @@ public class WarriorIA : MonoBehaviour
             coll.collider.gameObject.tag = gameObject.tag;
         }
 
+        //vector = vector.normalized * speed * Time.deltaTime;
+        //rotateLookAt();
+        
         switch (coll.collider.gameObject.name)
         {
             case "BorderTop":
                 y = -1;
                 x = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
             case "BorderBottom":
                 y = 1;
                 x = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
             case "BorderRight":
                 x = -1;
                 y = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
             case "BorderLeft":
                 x = 1;
                 y = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
         }
     }
@@ -197,18 +226,22 @@ public class WarriorIA : MonoBehaviour
             case "BorderTop":
                 y = -1;
                 x = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
             case "BorderBottom":
                 y = 1;
                 x = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
             case "BorderRight":
                 x = -1;
                 y = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
             case "BorderLeft":
                 x = 1;
                 y = Random.Range(-1f, 1f);
+                targetDir = new Vector3(x, y, 0).normalized * speed * Time.deltaTime;
                 break;
         }
     }
